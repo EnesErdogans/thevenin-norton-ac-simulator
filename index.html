@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Thevenin & Norton — AC Simülatör</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f4f2eb;--card:#fffdf7;--ink:#1c2230;--mut:#677083;--line:#e1dbcc;--soft:#efeadd;
+--vs:#7a8194;--vth:#d9480f;--vl:#c2255c;--il:#0c8a7b;--in:#3b5bdb;--z:#5f3dc4;}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:14.5px;line-height:1.5}
+.mono{font-family:'IBM Plex Mono',ui-monospace,monospace}
+header{max-width:1340px;margin:auto;padding:26px 24px 4px}
+h1{font-size:27px;margin:0 0 4px;letter-spacing:-.015em}
+h1 span{color:var(--vth)}
+.sub{color:var(--mut);max-width:820px;margin:0}
+.wrap{max-width:1340px;margin:auto;padding:16px 24px 60px;display:grid;grid-template-columns:340px minmax(0,1fr);gap:20px;align-items:start}
+@media(max-width:980px){.wrap{grid-template-columns:1fr}}
+aside{position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto;padding-right:2px}
+@media(max-width:980px){aside{position:static;max-height:none}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:16px}
+.card h2{font-size:12.5px;text-transform:uppercase;letter-spacing:.08em;margin:0 0 12px;color:var(--mut);font-weight:600}
+.card h3{font-size:15px;margin:0 0 6px}
+label.f{display:block;font-size:12.5px;color:var(--mut);margin:8px 0 3px}
+input[type=number]{width:100%;padding:5px 8px;border:1px solid var(--line);border-radius:6px;font:13px 'IBM Plex Mono',monospace;background:#fff;color:var(--ink)}
+input[type=number]:focus{outline:2px solid #c9bfa6;border-color:#c9bfa6}
+input[type=number]:disabled{background:var(--soft);color:#a3a7b3}
+input[type=range]{width:100%;accent-color:var(--vth)}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.zgrp{border-top:1px dashed var(--line);padding-top:10px;margin-top:12px}
+.zgrp .t{display:flex;justify-content:space-between;align-items:baseline;font-weight:600;margin-bottom:4px}
+.zgrp .t small{font-weight:400;color:var(--mut);font-size:12px}
+.zgrp .zval{font-size:12px;color:var(--z);margin-top:3px}
+.row{display:grid;grid-template-columns:44px 1fr 30px;align-items:center;gap:6px;margin:4px 0}
+.row .u{font-size:12px;color:var(--mut)}
+.row label{font-size:13px;display:flex;align-items:center;gap:4px;cursor:pointer}
+.btns{display:flex;flex-wrap:wrap;gap:6px}
+button{font:500 13px 'IBM Plex Sans',sans-serif;border:1px solid var(--line);background:#fff;color:var(--ink);padding:6px 11px;border-radius:7px;cursor:pointer}
+button:hover{border-color:#bfb59c;background:#fbf8ef}
+button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+button.pri{background:var(--vth);border-color:var(--vth);color:#fff}
+button.pri:hover{background:#c0400d}
+.tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+svg text{font-family:'IBM Plex Mono',monospace}
+.w{stroke:var(--ink);stroke-width:2;fill:none}
+.zb{fill:var(--card);stroke:var(--ink);stroke-width:2}
+.zb.hi{stroke:var(--z);fill:#f1edfb}
+.zb.dim{stroke:#b9bcc6;stroke-dasharray:4 3}
+.zn{font-size:14px;font-weight:600;text-anchor:middle;fill:var(--ink)}
+.zv{font-size:11.5px;text-anchor:middle;fill:var(--z)}
+.lbl{font-size:12px;fill:var(--ink)}
+.note{background:var(--soft);border-radius:8px;padding:10px 12px;font-size:13.5px;margin-top:8px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(158px,1fr));gap:10px;margin-bottom:16px}
+.kpi{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--c);border-radius:10px;padding:10px 12px}
+.kpi .k{font-size:12px;color:var(--mut)}
+.kpi .v{font:600 17px 'IBM Plex Mono',monospace;color:var(--c);white-space:nowrap}
+.kpi .s{font:12px 'IBM Plex Mono',monospace;color:var(--mut)}
+.step{display:grid;grid-template-columns:28px 1fr;gap:10px;padding:10px 0;border-top:1px solid var(--soft)}
+.step:first-child{border-top:none}
+.sn{width:26px;height:26px;border-radius:50%;background:var(--ink);color:#fff;display:grid;place-items:center;font-weight:600;font-size:13px}
+.step b{font-weight:600}
+.eq{font-family:'IBM Plex Mono',monospace;font-size:13px;background:#faf7ee;border:1px solid var(--soft);border-radius:6px;padding:6px 9px;margin:5px 0;overflow-x:auto;white-space:nowrap}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:1150px){.two{grid-template-columns:1fr}}
+canvas{width:100%;height:270px;display:block}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12.5px;margin-top:6px;color:var(--mut)}
+.legend i{display:inline-block;width:14px;height:3px;border-radius:2px;margin-right:5px;vertical-align:middle}
+table{border-collapse:collapse;width:100%;font-size:13px}
+td,th{padding:6px 8px;border-bottom:1px solid var(--soft);text-align:left}
+th{color:var(--mut);font-weight:500;font-size:12px}
+td.mono{white-space:nowrap}
+.ok{color:var(--il);font-weight:600}
+.bad{color:#c92a2a;font-weight:600}
+select{font:13px 'IBM Plex Sans';padding:4px 6px;border:1px solid var(--line);border-radius:6px;background:#fff}
+.quiz{display:none;border:2px solid var(--vth)}
+.quiz-on .quiz{display:block}
+.quiz-on .sol{filter:blur(8px);pointer-events:none;user-select:none}
+.qgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.fb{font-size:12.5px;margin-top:3px;min-height:18px}
+details{border-top:1px solid var(--soft);padding:8px 0}
+details:first-of-type{border-top:none}
+summary{cursor:pointer;font-weight:600}
+details p{margin:6px 0}
+.hint{font-size:12.5px;color:var(--mut)}
+</style>
+</head>
+<body>
+<header>
+  <h1>Thevenin <span>&</span> Norton — AC Devre Simülatörü</h1>
+  <p class="sub">Değerleri değiştir, devreyi aç/kısa devre yap, kaynağı söndür; Vth, Zth ve In fazör olarak adım adım hesaplansın. Tüm gerilim ve akımlar <b>RMS fazör</b>dür.</p>
+</header>
+
+<div class="wrap">
+<aside>
+  <div class="card">
+    <h2>Kaynak & frekans</h2>
+    <div class="g2">
+      <div><label class="f">|Vs| (V, RMS)</label><input type="number" id="Vs" step="0.5" min="0"></div>
+      <div><label class="f">Faz açısı (°)</label><input type="number" id="ph" step="5"></div>
+    </div>
+    <label class="f">Frekans f (Hz)</label>
+    <input type="number" id="f" min="1" max="100000" step="any">
+    <input type="range" id="fs" min="0" max="5" step="0.001">
+    <div class="hint mono" id="wtxt"></div>
+    <div id="zctrl"></div>
+    <label class="f">ZL direnç hızlı ayar (0 – 2000 Ω)</label>
+    <input type="range" id="RLs" min="0" max="2000" step="1">
+  </div>
+  <div class="card">
+    <h2>Hazır devreler</h2>
+    <div class="btns" id="presets"></div>
+    <div style="margin-top:12px" class="btns">
+      <button class="pri" id="btnMPT">ZL = Zth* yap (maks. güç)</button>
+    </div>
+  </div>
+  <div class="card">
+    <h2>Kendini test et</h2>
+    <p class="hint" style="margin-top:0">Rastgele bir devre üretir, çözümü gizler. Vth ve Zth'yi kendin hesapla, sonra kontrol et.</p>
+    <button class="pri" id="btnQuiz">Rastgele soru üret</button>
+  </div>
+</aside>
+
+<main>
+  <div class="card quiz" id="quizCard">
+    <h2>Soru modu</h2>
+    <p style="margin-top:0">Soldaki değerlere göre a-b uçlarından görülen Thevenin eşdeğerini bul. (Tolerans: genlik %2, açı ±1.5°)</p>
+    <div class="qgrid">
+      <div><label class="f">|Vth| (V)</label><input type="number" id="qV" step="any"><div class="fb" id="fbV"></div></div>
+      <div><label class="f">∠Vth (°)</label><input type="number" id="qA" step="any"><div class="fb" id="fbA"></div></div>
+      <div><label class="f">Rth = Re{Zth} (Ω)</label><input type="number" id="qR" step="any"><div class="fb" id="fbR"></div></div>
+      <div><label class="f">Xth = Im{Zth} (Ω)</label><input type="number" id="qX" step="any"><div class="fb" id="fbX"></div></div>
+    </div>
+    <div class="btns" style="margin-top:12px">
+      <button class="pri" id="btnCheck">Kontrol et</button>
+      <button id="btnReveal">Çözümü göster</button>
+      <button id="btnQuiz2">Yeni soru</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Devre şeması</h2>
+    <div class="tabs" id="modes">
+      <button data-m="load">Yüklü devre</button>
+      <button data-m="open">① Açık devre → Vth</button>
+      <button data-m="zth">② Kaynağı söndür → Zth</button>
+      <button data-m="short">③ Kısa devre → In</button>
+    </div>
+    <svg id="sch" viewBox="0 0 770 250" width="100%"></svg>
+    <div class="note" id="modeNote"></div>
+  </div>
+
+  <div class="sol">
+    <div class="kpis" id="kpis"></div>
+
+    <div class="card">
+      <h2>Adım adım çözüm</h2>
+      <div id="steps"></div>
+    </div>
+
+    <div class="card">
+      <h2>Eşdeğer devreler</h2>
+      <div class="two">
+        <div><h3>Thevenin eşdeğeri</h3><svg id="eqT" viewBox="0 0 380 200" width="100%"></svg></div>
+        <div><h3>Norton eşdeğeri</h3><svg id="eqN" viewBox="0 0 380 200" width="100%"></svg></div>
+      </div>
+      <div class="note" id="eqNote"></div>
+    </div>
+
+    <div class="card">
+      <h2>Doğrulama — üç yoldan aynı yük akımı</h2>
+      <table id="ver"></table>
+      <p class="hint" style="margin-bottom:0">Orijinal devre düğüm gerilimi yöntemiyle doğrudan çözülür; eşdeğerler doğruysa üç satır birebir aynı çıkar.</p>
+    </div>
+
+    <div class="two">
+      <div class="card">
+        <h2>Fazör diyagramı</h2>
+        <canvas id="phasor"></canvas>
+        <div class="legend">
+          <span><i style="background:var(--vs)"></i>Vs</span><span><i style="background:var(--vth)"></i>Vth</span>
+          <span><i style="background:var(--vl)"></i>VL</span><span><i style="background:var(--il)"></i>IL</span>
+          <span><i style="background:var(--in)"></i>In</span>
+        </div>
+        <p class="hint">Gerilimler ve akımlar ayrı ölçeklenir; açılar gerçektir.</p>
+      </div>
+      <div class="card">
+        <h2>Osiloskop (zaman domeni) <button id="btnPlay" style="float:right;margin-top:-6px">Durdur</button></h2>
+        <canvas id="scope"></canvas>
+        <div class="legend">
+          <span><i style="background:var(--vs)"></i>vs(t)</span><span><i style="background:var(--vl)"></i>vL(t)</span>
+          <span><i style="background:var(--il)"></i>iL(t) (ölçekli)</span>
+        </div>
+        <p class="hint" id="scopeTxt"></p>
+      </div>
+    </div>
+
+    <div class="two">
+      <div class="card">
+        <h2>Maksimum güç transferi</h2>
+        <canvas id="pplot"></canvas>
+        <div class="legend">
+          <span><i style="background:var(--il)"></i>P(RL), mevcut XL</span>
+          <span><i style="background:var(--vth)"></i>P(RL), XL = −Xth</span>
+        </div>
+        <p class="hint" id="pTxt"></p>
+      </div>
+      <div class="card">
+        <h2>Frekans taraması
+          <select id="fsel" style="float:right;margin-top:-5px">
+            <option value="zth">|Zth| (Ω)</option><option value="vth">|Vth| (V)</option>
+            <option value="il">|IL| (A)</option><option value="p">PL (W)</option><option value="ang">∠Zth (°)</option>
+          </select></h2>
+        <canvas id="fplot"></canvas>
+        <p class="hint">1 Hz – 100 kHz, logaritmik eksen. Dikey çizgi = şu anki frekans. Thevenin eşdeğeri <b>tek bir frekans için</b> geçerlidir.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Kısa teori</h2>
+    <details open><summary>Thevenin teoremi (AC)</summary>
+      <p>Doğrusal, tek frekanslı her iki uçlu devre; bir gerilim kaynağı <b>Vth</b> ve ona seri bir empedans <b>Zth</b> ile değiştirilebilir. DC'den tek farkı: her şey kompleks sayı (fazör) ve empedans <span class="mono">Z = R + j(ωL − 1/ωC)</span>.</p>
+      <p><b>Vth</b> = a-b uçları açıkken ölçülen gerilim (Voc). <b>Zth</b> = bağımsız kaynaklar söndürülünce (V-kaynağı → kısa devre, I-kaynağı → açık devre) uçlardan görülen empedans.</p>
+    </details>
+    <details><summary>Norton teoremi ve dönüşüm</summary>
+      <p>Aynı devre bir akım kaynağı <b>In</b> ve ona <b>paralel</b> Zth ile de gösterilebilir. In = a-b kısa devre edildiğinde akan akım (Isc).</p>
+      <p class="mono">Vth = In · Zth &nbsp;&nbsp; In = Vth / Zth &nbsp;&nbsp; Zth = Voc / Isc</p>
+      <p>Yani üç büyüklükten ikisini bilen üçüncüyü bulur. Bağımlı kaynak olan devrelerde Zth'yi doğrudan bulmak zorsa en pratik yol Voc/Isc'dir.</p>
+    </details>
+    <details><summary>Maksimum güç transferi</summary>
+      <p>AC'de yük empedansı Zth'nin <b>kompleks eşleniği</b> olduğunda yüke maksimum aktif güç aktarılır: <span class="mono">ZL = Zth* = Rth − jXth</span>. Reaktanslar birbirini götürür, devre rezonansa girer.</p>
+      <p class="mono">Pmax = |Vth|² / (4·Rth) &nbsp; (RMS)</p>
+      <p>Bu durumda verim %50'dir — kaynağın verdiği gücün yarısı Rth'de harcanır.</p>
+    </details>
+    <details><summary>Sık yapılan hatalar</summary>
+      <p>• Açık devrede Z₃ üzerinden akım geçmediği için Z₃'ü gerilim bölücüye katmak.<br>
+      • Zth'yi bulurken kaynağı söndürmeyi unutmak.<br>
+      • Empedansları paralel bağlarken genlikleri toplamak — <span class="mono">Z₁∥Z₂ = Z₁Z₂/(Z₁+Z₂)</span> kompleks yapılmalı.<br>
+      • Kondansatör reaktansının işaretini (−j) unutmak.<br>
+      • Thevenin eşdeğerini başka bir frekansta kullanmak: frekans değişince Zth ve Vth de değişir.</p>
+    </details>
+  </div>
+</main>
+</div>
+
+<script>
+// ---------- Kompleks sayı ----------
+const cx=(re,im=0)=>({re,im});
+const add=(a,b)=>cx(a.re+b.re,a.im+b.im);
+const mul=(a,b)=>cx(a.re*b.re-a.im*b.im,a.re*b.im+a.im*b.re);
+const div=(a,b)=>{const d=b.re*b.re+b.im*b.im;return cx((a.re*b.re+a.im*b.im)/d,(a.im*b.re-a.re*b.im)/d)};
+const mag=a=>Math.hypot(a.re,a.im);
+const ang=a=>Math.atan2(a.im,a.re)*180/Math.PI;
+const conj=a=>cx(a.re,-a.im);
+const pol=(r,d)=>cx(r*Math.cos(d*Math.PI/180),r*Math.sin(d*Math.PI/180));
+const par=(a,b)=>div(mul(a,b),add(a,b));
+const inv=z=>mag(z)<1e-12?cx(1e15):div(cx(1),z);
+const ok=a=>a&&isFinite(a.re)&&isFinite(a.im);
+
+// ---------- Biçimlendirme ----------
+const PRE=[[1e9,'G'],[1e6,'M'],[1e3,'k'],[1,''],[1e-3,'m'],[1e-6,'µ'],[1e-9,'n'],[1e-12,'p']];
+function fix(v,n=4){let s=Number(v.toPrecision(n)).toString();return s.replace('-','−')}
+function engP(x,n=4){const a=Math.abs(x);if(!isFinite(a))return{v:'∞',p:''};if(a<1e-13)return{v:'0',p:''};
+  for(const[m,p]of PRE){if(a>=m*0.99995)return{v:fix(x/m,n),p}}return{v:fix(x/1e-12,n),p:'p'}}
+function E(x,u,n){const e=engP(x,n);return `${e.v} ${e.p}${u}`}
+function angS(z){return mag(z)<1e-13?'0':fix(Math.round(ang(z)*10)/10,4)}
+function P(z,u){if(!ok(z))return 'tanımsız';const e=engP(mag(z));return `${e.v}∠${angS(z)}° ${e.p}${u}`}
+function Rc(z,u){if(!ok(z))return 'tanımsız';const s=Math.max(mag(z),1e-30);const re=Math.abs(z.re)<1e-9*s?0:z.re,im=Math.abs(z.im)<1e-9*s?0:z.im;
+  return `${fix(re)} ${im<0?'−':'+'} j${fix(Math.abs(im))}${u?' '+u:''}`}
+function short(v){const e=engP(v,3);return e.v+e.p}
+
+// ---------- Durum ----------
+const S={Vs:10,ph:0,f:1000,mode:'load',quiz:false,Z:{
+  Z1:{R:100,L:10,C:1,uL:true,uC:false},
+  Z2:{R:50,L:1,C:2,uL:false,uC:true},
+  Z3:{R:20,L:1,C:1,uL:false,uC:false},
+  ZL:{R:100,L:5,C:1,uL:false,uC:false}}};
+const ZINFO={Z1:['Z₁','seri, kaynak tarafı'],Z2:['Z₂','şönt (paralel kol)'],Z3:['Z₃','seri, uç tarafı'],ZL:['ZL','yük']};
+
+function Ze(e,w){let im=0;if(e.uL)im+=w*e.L*1e-3;if(e.uC)im-=1/(w*Math.max(e.C,1e-9)*1e-6);return cx(Math.max(e.R,0),im)}
+function solve(f){
+  const w=2*Math.PI*f,Z={};for(const k in S.Z)Z[k]=Ze(S.Z[k],w);
+  const Vs=pol(S.Vs,S.ph),Z12=add(Z.Z1,Z.Z2);
+  const Vth=mul(Vs,div(Z.Z2,Z12));
+  const Zp=par(Z.Z1,Z.Z2),Zth=add(Z.Z3,Zp);
+  const In=div(Vth,Zth),Zt=add(Zth,Z.ZL);
+  const IL=div(Vth,Zt),VL=mul(IL,Z.ZL);
+  const Zb=add(Z.Z3,Z.ZL);
+  const VA=div(mul(Vs,inv(Z.Z1)),add(add(inv(Z.Z1),inv(Z.Z2)),inv(Zb)));
+  const ILd=div(VA,Zb),ILn=mul(In,div(Zth,Zt));
+  const Sl=mul(VL,conj(IL));
+  return{w,f,...Z,Vs,Z12,Vth,Zp,Zth,In,IL,VL,ILd,ILn,Sl,VA};
+}
+
+// ---------- Kontroller ----------
+const zctrl=document.getElementById('zctrl');
+zctrl.innerHTML=Object.keys(S.Z).map(k=>`
+ <div class="zgrp"><div class="t">${ZINFO[k][0]} <small>${ZINFO[k][1]}</small></div>
+  <div class="row"><label>R</label><input type="number" id="${k}-R" min="0" step="any"><span class="u">Ω</span></div>
+  <div class="row"><label><input type="checkbox" id="${k}-uL">L</label><input type="number" id="${k}-L" min="0" step="any"><span class="u">mH</span></div>
+  <div class="row"><label><input type="checkbox" id="${k}-uC">C</label><input type="number" id="${k}-C" min="0.000001" step="any"><span class="u">µF</span></div>
+  <div class="zval mono" id="${k}-zv"></div></div>`).join('');
+
+const $=id=>document.getElementById(id);
+function syncInputs(){
+  $('Vs').value=S.Vs;$('ph').value=S.ph;$('f').value=+S.f.toPrecision(6);$('fs').value=Math.log10(S.f);$('RLs').value=Math.min(2000,S.Z.ZL.R);
+  for(const k in S.Z){const e=S.Z[k];$(k+'-R').value=+e.R.toPrecision(6);$(k+'-L').value=+e.L.toPrecision(6);$(k+'-C').value=+e.C.toPrecision(6);
+    $(k+'-uL').checked=e.uL;$(k+'-uC').checked=e.uC;$(k+'-L').disabled=!e.uL;$(k+'-C').disabled=!e.uC;}
+}
+function num(id,def){const v=parseFloat($(id).value);return isFinite(v)?v:def}
+function readInputs(src){
+  S.Vs=Math.max(0,num('Vs',S.Vs));S.ph=num('ph',0);
+  if(src==='fs')S.f=+(10**num('fs',3)).toPrecision(4);else S.f=Math.min(1e5,Math.max(1,num('f',S.f)));
+  for(const k in S.Z){const e=S.Z[k];e.R=Math.max(0,num(k+'-R',e.R));e.L=Math.max(0,num(k+'-L',e.L));e.C=Math.max(1e-6,num(k+'-C',e.C));
+    e.uL=$(k+'-uL').checked;e.uC=$(k+'-uC').checked;}
+  if(src==='RLs')S.Z.ZL.R=num('RLs',S.Z.ZL.R);
+  syncInputs();
+}
+document.querySelector('aside').addEventListener('input',e=>{if(e.target.matches('input')){readInputs(e.target.id);update()}});
+
+// ---------- Hazır devreler ----------
+const PRESETS={
+ 'Varsayılan (RLC)':{Vs:10,ph:0,f:1000,Z:{Z1:{R:100,L:10,C:1,uL:true,uC:false},Z2:{R:50,L:1,C:2,uL:false,uC:true},Z3:{R:20,L:1,C:1,uL:false,uC:false},ZL:{R:100,L:5,C:1,uL:false,uC:false}}},
+ 'Sadece direnç (DC gibi)':{Vs:12,ph:0,f:50,Z:{Z1:{R:100,L:1,C:1,uL:false,uC:false},Z2:{R:100,L:1,C:1,uL:false,uC:false},Z3:{R:50,L:1,C:1,uL:false,uC:false},ZL:{R:100,L:1,C:1,uL:false,uC:false}}},
+ 'RC alçak geçiren':{Vs:10,ph:0,f:1592,Z:{Z1:{R:1000,L:1,C:1,uL:false,uC:false},Z2:{R:0,L:1,C:0.1,uL:false,uC:true},Z3:{R:0,L:1,C:1,uL:false,uC:false},ZL:{R:10000,L:1,C:1,uL:false,uC:false}}},
+ 'Endüktif hat':{Vs:230,ph:0,f:50,Z:{Z1:{R:2,L:20,C:1,uL:true,uC:false},Z2:{R:200,L:500,C:1,uL:true,uC:false},Z3:{R:1,L:10,C:1,uL:true,uC:false},ZL:{R:20,L:30,C:1,uL:true,uC:false}}},
+ 'Seri rezonans (Z₂ = LC)':{Vs:10,ph:0,f:1000,Z:{Z1:{R:100,L:1,C:1,uL:false,uC:false},Z2:{R:5,L:10,C:2.533,uL:true,uC:true},Z3:{R:20,L:1,C:1,uL:false,uC:false},ZL:{R:100,L:1,C:1,uL:false,uC:false}}},
+};
+$('presets').innerHTML=Object.keys(PRESETS).map(n=>`<button data-p="${n}">${n}</button>`).join('');
+$('presets').onclick=e=>{const n=e.target.dataset.p;if(!n)return;const p=JSON.parse(JSON.stringify(PRESETS[n]));Object.assign(S,{Vs:p.Vs,ph:p.ph,f:p.f,Z:p.Z});syncInputs();update()};
+$('btnMPT').onclick=()=>{const r=solve(S.f);const L=S.Z.ZL;L.R=Math.max(0,r.Zth.re);const X=-r.Zth.im;
+  if(X>1e-9){L.uL=true;L.uC=false;L.L=X/r.w*1e3}else if(X<-1e-9){L.uC=true;L.uL=false;L.C=1/(r.w*-X)*1e6}else{L.uL=L.uC=false}
+  syncInputs();update()};
+
+// ---------- Mod sekmeleri ----------
+$('modes').onclick=e=>{const m=e.target.dataset.m;if(!m)return;S.mode=m;update()};
+const NOTES={
+ load:'<b>Yüklü devre.</b> ZL bağlı, IL akıyor. Amaç: ZL\'yi her değiştirdiğimizde bütün devreyi yeniden çözmek yerine, solundaki her şeyi tek bir kaynak + empedans ile değiştirmek. Adımlar için ①②③ sekmelerine geç.',
+ open:'<b>① Açık devre.</b> Yükü çıkar. a-b açık olduğu için Z₃ üzerinden akım geçmez, Z₃\'te gerilim düşmez → V<sub>ab</sub> = V<sub>A</sub>. Z₁ ve Z₂ basit bir <b>gerilim bölücü</b> olur: Vth = Vs·Z₂/(Z₁+Z₂).',
+ zth:'<b>② Kaynağı söndür.</b> Bağımsız gerilim kaynağı kısa devre olur. Uçlardan içeri bakınca Z₁ ile Z₂ <b>paralel</b>, bu paralel grup Z₃ ile <b>seri</b> görünür: Zth = Z₃ + Z₁∥Z₂.',
+ short:'<b>③ Kısa devre.</b> a-b\'yi tel ile kısa devre et; akan akım Norton akımıdır: In = Isc = Vth/Zth. Kontrol: Zth = Voc/Isc.'
+};
+
+// ---------- Şema ----------
+function zH(x,y,n,v,c=''){return `<rect x="${x-46}" y="${y-17}" width="92" height="34" rx="5" class="zb ${c}"/><text x="${x}" y="${y+5}" class="zn">${n}</text><text x="${x}" y="${y-26}" class="zv">${v}</text>`}
+function zV(x,y,n,v,c='',anchor='start'){return `<rect x="${x-17}" y="${y-38}" width="34" height="76" rx="5" class="zb ${c}"/><text x="${x}" y="${y+5}" class="zn">${n}</text><text x="${x+26}" y="${y+5}" class="zv" style="text-anchor:${anchor}">${v}</text>`}
+function srcV(x,y){return `<circle cx="${x}" cy="${y}" r="24" class="zb"/><path d="M${x-12},${y} q6,-10 12,0 t12,0" class="w"/><text x="${x}" y="${y-30}" class="lbl" text-anchor="middle" style="font-size:13px">+</text>`}
+const arrowDefs=`<defs>${['ink','il','in','vth','z'].map(c=>`<marker id="ar-${c}" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--${c})"/></marker>`).join('')}</defs>`;
+
+function drawSch(r){
+  const m=S.mode,q=S.quiz,T=50,B=210,M=130;
+  const zv=k=>Rc(r[k],'Ω');
+  let s=arrowDefs;
+  // kaynak tarafı
+  s+=`<path d="M110,${T} H540 M110,${B} H540 M320,${T} V${B}" class="w"/>`;
+  if(m==='zth'){
+    s+=`<path d="M110,${T} V${B}" class="w" style="stroke:var(--vth);stroke-width:3"/>`;
+    s+=`<text x="4" y="${M-6}" class="lbl" style="fill:var(--vth)">Vs = 0</text><text x="4" y="${M+12}" class="lbl" style="fill:var(--vth);font-size:11px">(kısa devre)</text>`;
+  }else{
+    s+=`<path d="M110,${T} V${M-24} M110,${M+24} V${B}" class="w"/>`+srcV(110,M);
+    s+=`<text x="4" y="${M-6}" class="lbl" style="font-weight:600">Vs</text><text x="4" y="${M+12}" class="lbl" style="font-size:11px">${P(r.Vs,'V')}</text>`;
+  }
+  const hi=m==='zth'?'hi':'';
+  s+=zH(210,T,'Z₁',zv('Z1'),hi)+zV(320,M,'Z₂',zv('Z2'),hi)+zH(430,T,'Z₃',zv('Z3'),m==='open'?'dim':hi);
+  s+=`<circle cx="320" cy="${T}" r="4" fill="var(--ink)"/><circle cx="320" cy="${B}" r="4" fill="var(--ink)"/><text x="320" y="${T-6}" class="lbl" text-anchor="middle" dx="-12" style="font-size:11px">A</text>`;
+  if(m==='open')s+=`<text x="430" y="${T+34}" class="lbl" text-anchor="middle" style="fill:var(--mut);font-size:11px">I = 0 → düşüm yok</text>`;
+  // sağ taraf
+  if(m==='load'){
+    s+=`<path d="M540,${T} H650 V${B} H540" class="w"/>`+zV(650,M,'ZL',zv('ZL'),'','start');
+    s+=`<path d="M572,${T} H606" stroke="var(--il)" stroke-width="2.5" marker-end="url(#ar-il)"/><text x="590" y="${T-10}" class="lbl" text-anchor="middle" style="fill:var(--il)">IL ${q?'= ?':'= '+P(r.IL,'A')}</text>`;
+  }else if(m==='open'){
+    s+=`<path d="M540,${T} H610 V${M-16} M610,${M+16} V${B} H540" class="w" stroke-dasharray="5 4" style="stroke:var(--mut);stroke-width:1.5"/><circle cx="610" cy="${M}" r="16" class="zb" style="stroke:var(--vth)"/><text x="610" y="${M+5}" class="zn" style="fill:var(--vth)">V</text>`;
+    s+=`<text x="636" y="${M-6}" class="lbl" style="fill:var(--vth);font-weight:600">Voc = Vth</text><text x="636" y="${M+12}" class="lbl" style="fill:var(--vth)">${q?'?':P(r.Vth,'V')}</text>`;
+  }else if(m==='short'){
+    s+=`<path d="M540,${T} H610 V${M-16} M610,${M+16} V${B} H540" class="w" style="stroke:var(--in)"/><circle cx="610" cy="${M}" r="16" class="zb" style="stroke:var(--in)"/><text x="610" y="${M+5}" class="zn" style="fill:var(--in)">A</text>`;
+    s+=`<path d="M560,${T} H594" stroke="var(--in)" stroke-width="2.5" marker-end="url(#ar-in)"/>`;
+    s+=`<text x="636" y="${M-6}" class="lbl" style="fill:var(--in);font-weight:600">Isc = In</text><text x="636" y="${M+12}" class="lbl" style="fill:var(--in)">${q?'?':P(r.In,'A')}</text>`;
+  }else{
+    s+=`<path d="M620,${M} H556" stroke="var(--z)" stroke-width="2.5" marker-end="url(#ar-z)"/>`;
+    s+=`<text x="630" y="${M-6}" class="lbl" style="fill:var(--z);font-weight:600">Zth (içeri bakış)</text><text x="630" y="${M+12}" class="lbl" style="fill:var(--z)">${q?'?':Rc(r.Zth,'Ω')}</text>`;
+  }
+  s+=`<circle cx="540" cy="${T}" r="5" fill="var(--card)" stroke="var(--ink)" stroke-width="2"/><circle cx="540" cy="${B}" r="5" fill="var(--card)" stroke="var(--ink)" stroke-width="2"/>`;
+  s+=`<text x="540" y="${T+24}" class="lbl" text-anchor="middle" style="font-weight:600">a</text><text x="540" y="${B-12}" class="lbl" text-anchor="middle" style="font-weight:600">b</text>`;
+  $('sch').innerHTML=s;
+  document.querySelectorAll('#modes button').forEach(b=>b.classList.toggle('on',b.dataset.m===m));
+  $('modeNote').innerHTML=NOTES[m];
+}
+
+function drawEq(r){
+  const T=40,B=160,M=100;
+  const load=(x)=>`<path d="M260,${T} H${x} V${B} H260" class="w" stroke-dasharray="5 4" style="stroke:var(--mut)"/><rect x="${x-15}" y="${M-32}" width="30" height="64" rx="5" class="zb" style="stroke:var(--mut);stroke-dasharray:4 3"/><text x="${x}" y="${M+5}" class="zn" style="font-size:12px;fill:var(--mut)">ZL</text>`;
+  const term=`<circle cx="260" cy="${T}" r="5" fill="var(--card)" stroke="var(--ink)" stroke-width="2"/><circle cx="260" cy="${B}" r="5" fill="var(--card)" stroke="var(--ink)" stroke-width="2"/><text x="260" y="${T+22}" class="lbl" text-anchor="middle">a</text><text x="260" y="${B-10}" class="lbl" text-anchor="middle">b</text>`;
+  let t=arrowDefs+`<path d="M70,${T} H260 M70,${B} H260 M70,${T} V${M-24} M70,${M+24} V${B}" class="w"/>`+load(330);
+  t+=`<circle cx="70" cy="${M}" r="24" class="zb" style="stroke:var(--vth)"/><path d="M58,${M} q6,-10 12,0 t12,0" class="w" style="stroke:var(--vth)"/>`;
+  t+=`<rect x="114" y="${T-17}" width="92" height="34" rx="5" class="zb hi"/><text x="160" y="${T+5}" class="zn">Zth</text><text x="160" y="${T-24}" class="zv">${Rc(r.Zth,'Ω')}</text>`;
+  t+=`<text x="4" y="${B+26}" class="lbl" style="fill:var(--vth)">Vth = ${P(r.Vth,'V')}</text>`+term;
+  t+=`<text x="300" y="${T-10}" class="lbl" text-anchor="middle" style="fill:var(--il);font-size:11px">IL = ${P(r.IL,'A')}</text>`;
+  $('eqT').innerHTML=t;
+  let n=arrowDefs+`<path d="M70,${T} H260 M70,${B} H260 M70,${T} V${M-24} M70,${M+24} V${B} M175,${T} V${B}" class="w"/>`+load(330);
+  n+=`<circle cx="70" cy="${M}" r="24" class="zb" style="stroke:var(--in)"/><path d="M70,${M+14} V${M-12}" stroke="var(--in)" stroke-width="2.5" marker-end="url(#ar-in)"/>`;
+  n+=`<rect x="158" y="${M-38}" width="34" height="76" rx="5" class="zb hi"/><text x="175" y="${M+5}" class="zn" style="font-size:12px">Zth</text><text x="200" y="${M+5}" class="zv" style="text-anchor:start">${Rc(r.Zth,'Ω')}</text>`;
+  n+=`<circle cx="175" cy="${T}" r="3.5" fill="var(--ink)"/><circle cx="175" cy="${B}" r="3.5" fill="var(--ink)"/>`;
+  n+=`<text x="4" y="${B+26}" class="lbl" style="fill:var(--in)">In = ${P(r.In,'A')}</text>`+term;
+  n+=`<text x="300" y="${T-10}" class="lbl" text-anchor="middle" style="fill:var(--il);font-size:11px">IL = ${P(r.IL,'A')}</text>`;
+  $('eqN').innerHTML=n;
+  const X=r.Zth.im;let el;
+  if(Math.abs(X)<1e-9*Math.max(1,mag(r.Zth)))el='tamamen dirençsel (reaktans yok)';
+  else if(X>0)el=`<b>${E(r.Zth.re,'Ω')}</b> dirence seri <b>${E(X/r.w,'H')}</b> bobin gibi davranır (endüktif)`;
+  else el=`<b>${E(r.Zth.re,'Ω')}</b> dirence seri <b>${E(1/(r.w*-X),'F')}</b> kondansatör gibi davranır (kapasitif)`;
+  $('eqNote').innerHTML=`f = ${E(r.f,'Hz')} için Zth: ${el}. Dönüşüm: <span class="mono">In·Zth = ${P(mul(r.In,r.Zth),'V')} = Vth</span> ✓`;
+}
+
+function drawKpis(r){
+  const pf=Math.cos(Math.atan2(r.Sl.im,r.Sl.re));
+  const k=[['Vth (açık devre)',P(r.Vth,'V'),Rc(r.Vth,'V'),'--vth'],['Zth',P(r.Zth,'Ω'),Rc(r.Zth,'Ω'),'--z'],
+    ['In (kısa devre)',P(r.In,'A'),Rc(r.In,'A'),'--in'],['IL (yük akımı)',P(r.IL,'A'),'VL = '+P(r.VL,'V'),'--il'],
+    ['PL (yük aktif gücü)',E(r.Sl.re,'W'),`Q = ${E(r.Sl.im,'VAr')} · pf = ${isFinite(pf)?pf.toFixed(3):'—'}`,'--vl']];
+  $('kpis').innerHTML=k.map(([a,b,c,d])=>`<div class="kpi" style="--c:var(${d})"><div class="k">${a}</div><div class="v">${b}</div><div class="s">${c}</div></div>`).join('');
+}
+
+function drawSteps(r){
+  const w=r.w,zl=k=>{const e=S.Z[k],parts=[`R = ${fix(e.R)}`];
+    if(e.uL)parts.push(`X<sub>L</sub> = ωL = ${fix(w*e.L*1e-3)}`);
+    if(e.uC)parts.push(`X<sub>C</sub> = 1/ωC = ${fix(1/(w*e.C*1e-6))}`);
+    return `<div class="eq">${ZINFO[k][0]} : ${parts.join(', ')} → ${ZINFO[k][0]} = ${Rc(r[k],'Ω')} = ${P(r[k],'Ω')}</div>`};
+  const pmax=r.Zth.re>0?mag(r.Vth)**2/(4*r.Zth.re):Infinity;
+  $('steps').innerHTML=`
+  <div class="step"><div class="sn">1</div><div><b>Açısal frekans</b><div class="eq">ω = 2πf = 2π · ${fix(r.f)} = ${fix(w)} rad/s</div></div></div>
+  <div class="step"><div class="sn">2</div><div><b>Empedansları kompleks yaz</b> — <span class="mono">Z = R + j(X<sub>L</sub> − X<sub>C</sub>)</span>
+    ${['Z1','Z2','Z3','ZL'].map(zl).join('')}</div></div>
+  <div class="step"><div class="sn">3</div><div><b>Vth — a-b açık devre gerilimi.</b> Z₃'ten akım geçmediği için gerilim bölücü:
+    <div class="eq">Vth = Vs · Z₂ / (Z₁ + Z₂) = (${P(r.Vs,'V')}) · (${P(r.Z2,'Ω')}) / (${P(r.Z12,'Ω')})</div>
+    <div class="eq">Vth = <b style="color:var(--vth)">${P(r.Vth,'V')}</b> = ${Rc(r.Vth,'V')}</div></div></div>
+  <div class="step"><div class="sn">4</div><div><b>Zth — kaynağı söndür (Vs → kısa devre).</b> Z₁ ∥ Z₂, sonra Z₃ ile seri:
+    <div class="eq">Z₁∥Z₂ = Z₁Z₂/(Z₁+Z₂) = (${P(mul(r.Z1,r.Z2),'Ω²')}) / (${P(r.Z12,'Ω')}) = ${Rc(r.Zp,'Ω')}</div>
+    <div class="eq">Zth = Z₃ + Z₁∥Z₂ = ${Rc(r.Z3,'Ω')} + ${Rc(r.Zp,'Ω')} = <b style="color:var(--z)">${Rc(r.Zth,'Ω')}</b> = ${P(r.Zth,'Ω')}</div></div></div>
+  <div class="step"><div class="sn">5</div><div><b>Norton akımı</b> (a-b kısa devre akımı):
+    <div class="eq">In = Vth / Zth = (${P(r.Vth,'V')}) / (${P(r.Zth,'Ω')}) = <b style="color:var(--in)">${P(r.In,'A')}</b></div></div></div>
+  <div class="step"><div class="sn">6</div><div><b>Yükü bağla</b> — artık sadece tek döngü var:
+    <div class="eq">IL = Vth / (Zth + ZL) = (${P(r.Vth,'V')}) / (${Rc(add(r.Zth,r.ZL),'Ω')}) = <b style="color:var(--il)">${P(r.IL,'A')}</b></div>
+    <div class="eq">VL = IL · ZL = ${P(r.VL,'V')} &nbsp; S = VL · IL* = ${Rc(r.Sl,'VA')}</div>
+    <div class="eq">P = ${E(r.Sl.re,'W')} &nbsp;·&nbsp; Pmax (ZL = Zth* iken) = |Vth|²/(4Rth) = ${E(pmax,'W')}</div></div></div>`;
+  for(const k in S.Z)$(k+'-zv').textContent='= '+Rc(r[k],'Ω');
+  $('wtxt').textContent=`ω = ${fix(r.w)} rad/s · T = ${E(1/r.f,'s')}`;
+}
+
+function drawVer(r){
+  const err=z=>mag(r.ILd)>0?(mag(add(z,cx(-r.ILd.re,-r.ILd.im)))/mag(r.ILd)*100):0;
+  const row=(a,b,z,f)=>`<tr><td>${a}</td><td class="mono">${b}</td><td class="mono">${P(z,'A')}</td><td class="mono ${f<1e-6?'ok':'bad'}">${f<1e-6?'✓ ':''}${f.toExponential(1)} %</td></tr>`;
+  $('ver').innerHTML=`<tr><th>Yöntem</th><th>Formül</th><th>IL</th><th>Fark</th></tr>`+
+   row('Orijinal devre (düğüm)','V<sub>A</sub>/(Z₃+ZL)',r.ILd,0)+
+   row('Thevenin eşdeğeri','Vth/(Zth+ZL)',r.IL,err(r.IL))+
+   row('Norton eşdeğeri','In·Zth/(Zth+ZL)',r.ILn,err(r.ILn));
+}
+
+// ---------- Canvas yardımcıları ----------
+function setup(c){const d=window.devicePixelRatio||1,b=c.getBoundingClientRect();c.width=Math.max(1,b.width*d);c.height=Math.max(1,b.height*d);const g=c.getContext('2d');g.setTransform(d,0,0,d,0,0);return{g,W:b.width,H:b.height}}
+function nice(x){const p=10**Math.floor(Math.log10(x)),f=x/p;return(f<1.5?1:f<3?2:f<7?5:10)*p}
+function ticks(a,b,n){if(!(b>a))return[a];const s=nice((b-a)/n),o=[];for(let v=Math.ceil(a/s)*s;v<=b+s*1e-9;v+=s)o.push(+v.toPrecision(10));return o}
+function plot(c,o){
+  const{g,W,H}=setup(c),L=56,R=14,T=12,B=40;g.clearRect(0,0,W,H);
+  const tx=o.xlog?Math.log10:x=>x,xs=o.xs,x0=tx(xs[0]),x1=tx(xs[xs.length-1]);
+  let all=[];o.series.forEach(s=>s.ys.forEach(y=>{if(isFinite(y))all.push(y)}));all.sort((a,b)=>a-b);
+  let ymin=o.ymin??0,ymax=all.length?all[Math.floor((all.length-1)*(o.clip||1))]:1;
+  if(o.ymin==null&&all.length&&all[0]<0)ymin=all[0]*1.1;
+  ymax=ymax>0?ymax*1.12:1;if(o.ymax!=null)ymax=o.ymax;
+  const X=x=>L+(tx(x)-x0)/(x1-x0)*(W-L-R),Y=y=>T+(1-(y-ymin)/(ymax-ymin))*(H-T-B);
+  g.font='11px IBM Plex Mono, monospace';g.lineWidth=1;
+  ticks(ymin,ymax,5).forEach(v=>{const y=Y(v);if(y<T-1||y>H-B+1)return;g.strokeStyle='#ebe6d9';g.beginPath();g.moveTo(L,y);g.lineTo(W-R,y);g.stroke();g.fillStyle='#677083';g.textAlign='right';g.fillText(o.yfmt?o.yfmt(v):short(v),L-6,y+4)});
+  const xt=o.xlog?Array.from({length:Math.floor(x1)-Math.ceil(x0)+1},(_,i)=>10**(Math.ceil(x0)+i)):ticks(xs[0],xs[xs.length-1],6);
+  xt.forEach(v=>{const x=X(v);g.strokeStyle='#ebe6d9';g.beginPath();g.moveTo(x,T);g.lineTo(x,H-B);g.stroke();g.fillStyle='#677083';g.textAlign='center';g.fillText(short(v),x,H-B+15)});
+  g.strokeStyle='#b8b09c';g.beginPath();g.moveTo(L,T);g.lineTo(L,H-B);g.lineTo(W-R,H-B);g.stroke();
+  g.fillStyle='#677083';g.textAlign='center';g.fillText(o.xlabel,(L+W-R)/2,H-6);
+  g.save();g.beginPath();g.rect(L,T,W-L-R,H-T-B);g.clip();
+  if(o.vline!=null){g.strokeStyle='#1c2230';g.setLineDash([4,4]);g.beginPath();g.moveTo(X(o.vline),T);g.lineTo(X(o.vline),H-B);g.stroke();g.setLineDash([])}
+  o.series.forEach(s=>{g.strokeStyle=s.color;g.lineWidth=2.2;g.setLineDash(s.dash||[]);g.beginPath();let pen=false;
+    xs.forEach((x,i)=>{const y=s.ys[i];if(!isFinite(y)){pen=false;return}const py=Y(Math.max(ymin-(ymax-ymin),Math.min(y,ymax*3)));pen?g.lineTo(X(x),py):g.moveTo(X(x),py);pen=true});g.stroke()});
+  g.setLineDash([]);
+  (o.markers||[]).forEach(m=>{if(!isFinite(m.y)||!isFinite(m.x))return;const px=X(m.x),py=Y(m.y);g.fillStyle=m.color;g.beginPath();g.arc(px,py,5,0,7);g.fill();g.strokeStyle='#fff';g.lineWidth=1.5;g.stroke();
+    g.fillStyle=m.color;g.textAlign=px>W*0.65?'right':'left';g.font='600 11px IBM Plex Mono, monospace';g.fillText(m.label,px+(px>W*0.65?-9:9),py+(m.below?18:-8))});
+  g.restore();
+}
+
+function arrow(g,x0,y0,x1,y1,col,dash){const a=Math.atan2(y1-y0,x1-x0),L=Math.hypot(x1-x0,y1-y0);if(L<2)return;
+  g.strokeStyle=g.fillStyle=col;g.lineWidth=2.4;g.setLineDash(dash||[]);g.beginPath();g.moveTo(x0,y0);g.lineTo(x1-8*Math.cos(a),y1-8*Math.sin(a));g.stroke();g.setLineDash([]);
+  g.beginPath();g.moveTo(x1,y1);g.lineTo(x1-11*Math.cos(a-.4),y1-11*Math.sin(a-.4));g.lineTo(x1-11*Math.cos(a+.4),y1-11*Math.sin(a+.4));g.closePath();g.fill()}
+
+function drawPhasor(r){
+  const c=$('phasor'),{g,W,H}=setup(c),ox=W/2,oy=H/2,R=Math.min(W,H)/2-26;g.clearRect(0,0,W,H);
+  g.strokeStyle='#ebe6d9';g.lineWidth=1;g.beginPath();g.arc(ox,oy,R,0,7);g.stroke();g.beginPath();g.arc(ox,oy,R/2,0,7);g.stroke();
+  g.strokeStyle='#c8c0ab';g.beginPath();g.moveTo(ox-R-10,oy);g.lineTo(ox+R+10,oy);g.moveTo(ox,oy-R-10);g.lineTo(ox,oy+R+10);g.stroke();
+  g.fillStyle='#677083';g.font='11px IBM Plex Mono, monospace';g.textAlign='left';g.fillText('Re',ox+R+2,oy-5);g.fillText('Im',ox+5,oy-R-2);
+  const V=[['Vs',r.Vs,'#7a8194'],['Vth',r.Vth,'#d9480f'],['VL',r.VL,'#c2255c']],I=[['IL',r.IL,'#0c8a7b'],['In',r.In,'#3b5bdb',[6,4]]];
+  const vm=Math.max(...V.map(v=>ok(v[1])?mag(v[1]):0))||1,im=Math.max(...I.map(v=>ok(v[1])?mag(v[1]):0))||1;
+  const dr=(arr,mx)=>arr.forEach(([n,z,col,d])=>{if(!ok(z))return;const x=ox+z.re/mx*R,y=oy-z.im/mx*R;arrow(g,ox,oy,x,y,col,d);
+    g.fillStyle=col;g.font='600 12px IBM Plex Mono, monospace';const a=Math.atan2(oy-y,x-ox);g.textAlign=Math.cos(a)>=0?'left':'right';g.fillText(n,x+8*Math.cos(a),y-8*Math.sin(a)+4)});
+  dr(V,vm);dr(I,im);
+}
+
+let playing=true,phase0=0,lastT=0,R0=null;
+function drawScope(){
+  const r=R0;if(!r)return;const c=$('scope'),{g,W,H}=setup(c),L=10,Rr=10,T=12,B=26;g.clearRect(0,0,W,H);
+  const oy=(T+H-B)/2,A=(H-T-B)/2*0.92;
+  g.strokeStyle='#ebe6d9';g.lineWidth=1;for(let i=0;i<=8;i++){const x=L+i*(W-L-Rr)/8;g.beginPath();g.moveTo(x,T);g.lineTo(x,H-B);g.stroke()}
+  for(let i=0;i<=4;i++){const y=T+i*(H-T-B)/4;g.beginPath();g.moveTo(L,y);g.lineTo(W-Rr,y);g.stroke()}
+  g.strokeStyle='#b8b09c';g.beginPath();g.moveTo(L,oy);g.lineTo(W-Rr,oy);g.stroke();
+  const vpk=Math.max(mag(r.Vs),mag(r.VL))*Math.SQRT2||1,ipk=mag(r.IL)*Math.SQRT2||1;
+  const tr=[[r.Vs,'#7a8194',1/vpk],[r.VL,'#c2255c',1/vpk],[r.IL,'#0c8a7b',0.85/ipk]];
+  tr.forEach(([z,col,k])=>{if(!ok(z))return;const m=mag(z)*Math.SQRT2,p=Math.atan2(z.im,z.re);g.strokeStyle=col;g.lineWidth=2.2;g.beginPath();
+    for(let i=0;i<=300;i++){const th=i/300*4*Math.PI,x=L+i/300*(W-L-Rr),y=oy-A*k*m*Math.cos(th-phase0+p);i?g.lineTo(x,y):g.moveTo(x,y)}g.stroke()});
+  g.fillStyle='#677083';g.font='11px IBM Plex Mono, monospace';g.textAlign='center';g.fillText(`yatay: 2 periyot = ${E(2/r.f,'s')}  ·  dikey: tepe = ${E(vpk,'V')}`,W/2,H-8);
+}
+function loop(t){const dt=lastT?(t-lastT)/1000:0;lastT=t;if(playing){phase0+=dt*1.6;drawScope()}requestAnimationFrame(loop)}
+$('btnPlay').onclick=()=>{playing=!playing;$('btnPlay').textContent=playing?'Durdur':'Oynat';drawScope()};
+
+function drawPower(r){
+  const Rth=r.Zth.re,Xth=r.Zth.im,XL=r.ZL.im,mx=Math.max(4*Math.max(Rth,0),1.5*r.ZL.re,10),N=240,xs=[],a=[],b=[];
+  const V2=mag(r.Vth)**2;
+  for(let i=0;i<=N;i++){const RL=mx*i/N;xs.push(RL);a.push(V2*RL/((Rth+RL)**2+(Xth+XL)**2));b.push(V2*RL/((Rth+RL)**2))}
+  const pmax=Rth>0?V2/(4*Rth):NaN;
+  plot($('pplot'),{xs,xlabel:'RL (Ω)',series:[{ys:a,color:'#0c8a7b'},{ys:b,color:'#d9480f',dash:[6,4]}],
+    markers:[{x:r.ZL.re,y:r.Sl.re,color:'#0c8a7b',label:'şu an',below:true},{x:Rth,y:pmax,color:'#d9480f',label:'Pmax'}],ymax:(isFinite(pmax)?Math.max(pmax,r.Sl.re):r.Sl.re*1.5||1)*1.15});
+  $('pTxt').innerHTML=`Şu an PL = ${E(r.Sl.re,'W')}. Maksimum, ZL = Zth* = ${Rc(conj(r.Zth),'Ω')} olduğunda: Pmax = ${E(pmax,'W')} (%${isFinite(pmax)&&pmax>0?(r.Sl.re/pmax*100).toFixed(1):'—'} kullanılıyor).`;
+}
+
+function drawFreq(r){
+  const sel=$('fsel').value,xs=[],ys=[];
+  for(let i=0;i<=320;i++){const f=10**(5*i/320);xs.push(f);const q=solve(f);
+    ys.push(sel==='zth'?mag(q.Zth):sel==='vth'?mag(q.Vth):sel==='il'?mag(q.IL):sel==='p'?q.Sl.re:ang(q.Zth))}
+  const cur=sel==='zth'?mag(r.Zth):sel==='vth'?mag(r.Vth):sel==='il'?mag(r.IL):sel==='p'?r.Sl.re:ang(r.Zth);
+  plot($('fplot'),{xs,xlog:true,xlabel:'f (Hz)',series:[{ys,color:sel==='zth'||sel==='ang'?'#5f3dc4':sel==='vth'?'#d9480f':sel==='il'?'#0c8a7b':'#c2255c'}],
+    vline:r.f,clip:sel==='ang'?1:0.98,ymin:sel==='ang'?-95:0,ymax:sel==='ang'?95:undefined,yfmt:sel==='ang'?(v=>v.toFixed(0)+'°'):undefined,
+    markers:[{x:r.f,y:cur,color:'#1c2230',label:sel==='ang'?fix(cur,3)+'°':short(cur)}]});
+}
+$('fsel').onchange=()=>drawFreq(R0);
+
+// ---------- Soru modu ----------
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+function newQuiz(){
+  S.Vs=pick([5,10,12,20,24,100]);S.ph=pick([0,0,0,30,-30,45,90]);S.f=pick([50,100,500,1000,2000,5000]);
+  for(const k of['Z1','Z2','Z3']){const e=S.Z[k];e.R=pick([0,10,22,47,50,68,100,150,220,330]);e.L=pick([1,2.2,4.7,10,22,47,100]);e.C=pick([0.1,0.22,0.47,1,2.2,4.7,10,47]);
+    e.uL=Math.random()<.4;e.uC=Math.random()<.35;if(e.R===0&&!e.uL&&!e.uC)e.R=100;}
+  S.quiz=true;S.mode='load';document.body.classList.add('quiz-on');['qV','qA','qR','qX'].forEach(i=>$(i).value='');['fbV','fbA','fbR','fbX'].forEach(i=>$(i).innerHTML='');
+  syncInputs();update();$('quizCard').scrollIntoView({behavior:'smooth',block:'start'});
+}
+$('btnQuiz').onclick=newQuiz;$('btnQuiz2').onclick=newQuiz;
+$('btnReveal').onclick=()=>{S.quiz=false;document.body.classList.remove('quiz-on');update()};
+$('btnCheck').onclick=()=>{const r=R0,sc=mag(r.Zth);
+  const chk=(id,fb,val,good)=>{const v=parseFloat($(id).value);if(!isFinite(v)){$(fb).innerHTML='<span class="hint">boş</span>';return}
+    $(fb).innerHTML=good(v)?'<span class="ok">✓ doğru</span>':`<span class="bad">✗ olmadı</span>`};
+  chk('qV','fbV',mag(r.Vth),v=>Math.abs(v-mag(r.Vth))<=0.02*mag(r.Vth)+1e-9);
+  chk('qA','fbA',ang(r.Vth),v=>{let d=Math.abs(v-ang(r.Vth))%360;d=Math.min(d,360-d);return d<=1.5||mag(r.Vth)<1e-9});
+  chk('qR','fbR',r.Zth.re,v=>Math.abs(v-r.Zth.re)<=0.02*sc+1e-9);
+  chk('qX','fbX',r.Zth.im,v=>Math.abs(v-r.Zth.im)<=0.02*sc+1e-9);
+};
+
+// ---------- Ana güncelleme ----------
+function update(){
+  const r=solve(S.f);R0=r;
+  document.querySelectorAll('#modes button').forEach(b=>b.disabled=S.quiz&&b.dataset.m!=='load');
+  drawSch(r);drawKpis(r);drawSteps(r);drawEq(r);drawVer(r);drawPhasor(r);drawScope();drawPower(r);drawFreq(r);
+  $('scopeTxt').innerHTML=`vL, vs'ye göre <b>${(()=>{let d=ang(r.VL)-ang(r.Vs);d=((d+540)%360)-180;return fix(d,3)})()}°</b> faz farkında; iL, vL'ye göre <b>${(()=>{let d=ang(r.IL)-ang(r.VL);d=((d+540)%360)-180;return fix(d,3)})()}°</b> (yükün empedans açısının tersi).`;
+}
+let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(update,120)});
+syncInputs();update();requestAnimationFrame(loop);
+if(document.fonts)document.fonts.ready.then(update);
+</script>
+</body>
+</html>
